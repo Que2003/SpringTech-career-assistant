@@ -22,6 +22,8 @@ This project is designed around Quenton Dillings' career path: IT support, help 
 - CSS
 - JavaScript
 - Browser localStorage
+- GitHub Actions
+- GitHub Pages
 - No paid API required
 
 ## How to run locally
@@ -47,15 +49,15 @@ Then open:
 http://localhost:8000
 ```
 
-## Suggested GitHub Pages deployment
+## Automatic deployment
 
-Because this is a static app, it can be deployed from the root of the `main` branch using GitHub Pages.
+This repo includes a GitHub Actions workflow at `.github/workflows/deploy-pages.yml`.
 
-1. Go to repository **Settings**
-2. Open **Pages**
-3. Under **Build and deployment**, choose **Deploy from a branch**
-4. Select `main` and `/root`
-5. Save
+Every time code is pushed to the `main` branch, GitHub Actions will package the static site and deploy it to GitHub Pages.
+
+The workflow can also be triggered manually from the **Actions** tab using **Run workflow**.
+
+If GitHub Pages has not been enabled yet, open repository **Settings > Pages** and set the source to **GitHub Actions**. After that, future updates deploy automatically.
 
 ## Portfolio note
 
