@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SpringTech Career Assistant</title>
+  <meta name="description" content="Career assistant for IT support, cybersecurity, help desk, desktop support, and technical support job applications." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <nav class="nav">
+      <div class="brand">
+        <span class="brand-mark">ST</span>
+        <span>SpringTech Career Assistant</span>
+      </div>
+      <a href="#workspace" class="nav-link">Start Building</a>
+    </nav>
+
+    <section class="hero-grid">
+      <div>
+        <p class="eyebrow">IT career toolkit</p>
+        <h1>Turn a job post into stronger application material.</h1>
+        <p class="hero-copy">
+          Paste a job description and build a targeted pitch, ATS keywords, resume bullet ideas,
+          cover letter notes, and interview answers for IT support and cybersecurity roles.
+        </p>
+        <div class="hero-actions">
+          <a class="button primary" href="#workspace">Use the assistant</a>
+          <a class="button secondary" href="#roadmap">View roadmap</a>
+        </div>
+      </div>
+
+      <aside class="profile-card" aria-label="Candidate profile">
+        <h2>Candidate Profile</h2>
+        <ul>
+          <li>CompTIA A+ certified</li>
+          <li>Google IT Support & Cybersecurity</li>
+          <li>Customer-facing technical support</li>
+          <li>Access control, incident documentation, troubleshooting</li>
+          <li>Hands-on labs: networking, Linux, Packet Tracer, help desk workflows</li>
+        </ul>
+      </aside>
+    </section>
+  </header>
+
+  <main>
+    <section id="workspace" class="workspace section">
+      <div class="section-heading">
+        <p class="eyebrow">Application builder</p>
+        <h2>Paste the job details</h2>
+        <p>Use this for help desk, desktop support, technical support, SOC, cybersecurity, and field IT roles.</p>
+      </div>
+
+      <div class="app-grid">
+        <form id="career-form" class="panel form-panel">
+          <label for="job-title">Job title</label>
+          <input id="job-title" name="jobTitle" type="text" placeholder="Example: IT Desktop Support Technician" />
+
+          <label for="company">Company</label>
+          <input id="company" name="company" type="text" placeholder="Example: prosource.it" />
+
+          <label for="job-description">Job description</label>
+          <textarea id="job-description" name="jobDescription" rows="10" placeholder="Paste the job description here..."></textarea>
+
+          <label for="notes">Notes about your experience</label>
+          <textarea id="notes" name="notes" rows="5" placeholder="Example: A+, Google Cybersecurity, customer service, access control, troubleshooting, tickets, labs..."></textarea>
+
+          <div class="button-row">
+            <button class="button primary" type="submit">Generate</button>
+            <button class="button secondary" id="save-job" type="button">Save job</button>
+            <button class="button ghost" id="clear-form" type="button">Clear</button>
+          </div>
+        </form>
+
+        <section class="panel output-panel" aria-live="polite">
+          <div class="output-header">
+            <div>
+              <p class="eyebrow">Generated output</p>
+              <h2 id="output-title">Ready when you are</h2>
+            </div>
+            <button class="button secondary small" id="copy-output" type="button">Copy</button>
+          </div>
+          <div id="output" class="output empty">
+            Paste a job description and click Generate. Your tailored application notes will appear here.
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="section saved-section">
+      <div class="section-heading">
+        <p class="eyebrow">Job tracker</p>
+        <h2>Saved opportunities</h2>
+        <p>Saved jobs stay in your browser using localStorage.</p>
+      </div>
+      <div id="saved-jobs" class="saved-jobs"></div>
+    </section>
+
+    <section id="roadmap" class="section roadmap">
+      <div class="section-heading">
+        <p class="eyebrow">Next moves</p>
+        <h2>Career roadmap</h2>
+      </div>
+      <div class="roadmap-grid">
+        <article class="panel step-card">
+          <span>01</span>
+          <h3>Help Desk / Desktop Support</h3>
+          <p>Show ticketing, troubleshooting, Windows, Microsoft 365, customer support, documentation, and hardware/software support.</p>
+        </article>
+        <article class="panel step-card">
+          <span>02</span>
+          <h3>Network & Systems Foundation</h3>
+          <p>Build labs with DHCP, DNS, VLANs, VPNs, permissions, endpoint setup, imaging, and basic scripting.</p>
+        </article>
+        <article class="panel step-card">
+          <span>03</span>
+          <h3>Security / SOC Track</h3>
+          <p>Add Security+, SIEM basics, CrowdStrike concepts, incident response, vulnerability basics, and report writing.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Built by SpringTech • Career assistant for practical IT job readiness</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
