@@ -247,7 +247,8 @@ function getFormData() {
     jobTitle: document.querySelector("#job-title").value.trim(),
     company: document.querySelector("#company").value.trim(),
     jobDescription: document.querySelector("#job-description").value.trim(),
-    notes: document.querySelector("#notes").value.trim()
+    notes: document.querySelector("#notes").value.trim(),
+    jobUrl: (document.querySelector("#job-url")?.value || "").trim()
   };
 }
 
@@ -279,31 +280,29 @@ function extractKeywords(jobDescription) {
 }
 
 function detectRoleType(jobTitle, jobDescription) {
+  const title = (jobTitle || "").toLowerCase();
   const text = `${jobTitle} ${jobDescription}`.toLowerCase();
 
-  if (/soc|security|cyber|siem|incident response|vulnerability|crowdstrike|falcon|nist|cmmc/.test(text)) {
-    return "security";
+  // Title is the strongest signal — check specific roles before the generic
+  // "support technician/specialist" catch-all, since those phrases overlap.
+  if (/soc analyst|security analyst|cyber|incident response/.test(title)) return "security";
+  if (/network/.test(title)) return "network";
+  if (/data center|datacenter/.test(title)) return "dataCenter";
+  if (/desktop support|field (it|service|technician)|deskside/.test(title)) return "desktop";
+  if (/help desk|service desk|technical support|it support|support technician|support specialist/.test(title)) {
+    return "general";
   }
 
-  if (/desktop|endpoint|hardware|printer|imaging|windows 10|windows 11|device|field technician/.test(text)) {
-    return "desktop";
-  }
+  // Fall back to description, but require *genuine* security focus, not a
+  // single "Security+ preferred" mention, before classifying as SOC.
+  const securityHits = (text.match(/\bsoc\b|siem|crowdstrike|falcon|incident response|threat|vulnerability management|security operations|nist|cmmc/g) || []).length;
+  if (securityHits >= 2) return "security";
 
-  if (/network|vpn|dns|dhcp|tcp\/ip|lan|wan|vlan|router|switch|wireless/.test(text)) {
-    return "network";
-  }
-
-  if (/cloud|azure|aws|entra|identity|iam|microsoft 365|office 365|mfa|sso/.test(text)) {
-    return "cloud";
-  }
-
-  if (/data center|datacenter|rack|cabling|server|infrastructure|hardware technician/.test(text)) {
-    return "dataCenter";
-  }
-
-  if (/implementation|onboarding|requirements|client|configure|deployment|training/.test(text)) {
-    return "implementation";
-  }
+  if (/desktop|endpoint|hardware|printer|imaging|field technician/.test(text)) return "desktop";
+  if (/network|vpn|dns|dhcp|tcp\/ip|\blan\b|\bwan\b|vlan|router|switch|wireless/.test(text)) return "network";
+  if (/data center|datacenter|rack|cabling|server room|infrastructure technician/.test(text)) return "dataCenter";
+  if (/\bcloud\b|azure|aws|entra|identity|\biam\b/.test(text)) return "cloud";
+  if (/implementation|onboarding|requirements gathering|configure|deployment|training users/.test(text)) return "implementation";
 
   return "general";
 }
@@ -334,13 +333,21 @@ function chooseProjects(roleProfile) {
 function calculateFitScore(keywords, roleProfile) {
   const allProfileTerms = [...profile.strengths, ...profile.certifications, ...roleProfile.skills, ...profile.projects.flatMap((project) => project.tags)].join(" ").toLowerCase();
   const matches = keywords.filter((keyword) => allProfileTerms.includes(keyword.toLowerCase().split(" ")[0]));
-  const baseScore = 68;
-  const score = Math.min(94, baseScore + matches.length * 3);
+  const gaps = getSkillGaps(keywords, allProfileTerms);
+
+  // Score on the *ratio* of matched keywords, not a flat per-match bonus, so
+  // a strong-fit posting and a weak-fit posting actually separate.
+  const total = keywords.length || 1;
+  const ratio = matches.length / total; // 0..1
+  // Floor of 40 (you always bring transferable support skills), ceiling 96.
+  let score = Math.round(40 + ratio * 56);
+  if (keywords.length < 4) score = Math.min(score, 70); // thin posting = low confidence
+  score = Math.max(40, Math.min(96, score));
 
   return {
     score,
     matches: [...new Set(matches)].slice(0, 10),
-    gaps: getSkillGaps(keywords, allProfileTerms)
+    gaps
   };
 }
 
@@ -508,7 +515,7 @@ function generateOutput(data) {
   const studyPlan = buildStudyPlan(data, roleProfile);
   const checklist = buildApplicationChecklist(data, fitSummary.fit);
 
-  return `SPRINGTECH CAREER ASSISTANT — FULL APPLICATION PACKAGE\n${data.company || "Company not entered"} | ${data.jobTitle || roleProfile.title}\n\nIMPORTANT PRIVACY NOTE\nThis public website does not hard-code your phone number or email. Add them manually before submitting a real application.\n\n1) FIT SNAPSHOT\n${fitSummary.text}\n\n2) RECRUITER-READY PITCH\n${buildElevatorPitch(data, roleProfile, keywords)}\n\n3) FULL TAILORED RESUME DRAFT\n${buildResumeDraft(data, roleProfile, keywords)}\n\n4) COVER LETTER DRAFT\n${buildCoverLetter(data, roleProfile, keywords)}\n\n5) RECRUITER / HIRING MANAGER MESSAGE\n${buildRecruiterMessage(data, roleProfile)}\n\n6) LINKEDIN PROJECT POST\n${buildLinkedInPost(data, roleProfile)}\n\n7) INTERVIEW ANSWERS\n${buildInterviewAnswers(data, roleProfile)}\n\n8) STUDY PLAN BEFORE APPLYING / INTERVIEWING\n${formatList(studyPlan)}\n\n9) APPLICATION CHECKLIST\n${formatList(checklist)}\n\n10) QUICK FOLLOW-UP MESSAGE\nHello, I recently applied for the ${data.jobTitle || "open IT role"} position${data.company ? ` at ${data.company}` : ""}. I’m very interested in the opportunity and believe my customer support background, CompTIA A+ knowledge, IT support training, cybersecurity foundation, and troubleshooting mindset would allow me to be a strong asset to the team. Thank you for your time and consideration.`;
+  return `SPRINGTECH CAREER ASSISTANT — FULL APPLICATION PACKAGE\n${data.company || "Company not entered"} | ${data.jobTitle || roleProfile.title}\n\nIMPORTANT PRIVACY NOTE\nThis public website does not hard-code your phone number or email. Add them manually before submitting a real application.\n\n1) FIT SNAPSHOT\n${fitSummary.text}\n\n2) RECRUITER-READY PITCH\n${buildElevatorPitch(data, roleProfile, keywords)}\n\n3) FULL TAILORED RESUME DRAFT\n${buildResumeDraft(data, roleProfile, keywords)}\n\n4) COVER LETTER DRAFT\n${buildCoverLetter(data, roleProfile, keywords)}\n\n5) RECRUITER / HIRING MANAGER MESSAGE\n${buildRecruiterMessage(data, roleProfile)}\n\n6) LINKEDIN PROJECT POST\n${buildLinkedInPost(data, roleProfile)}\n\n7) INTERVIEW ANSWERS\n${buildInterviewAnswers(data, roleProfile)}\n\n8) STUDY PLAN BEFORE APPLYING / INTERVIEWING\n${formatList(studyPlan)}\n\n9) APPLICATION CHECKLIST\n${formatList(checklist)}\n\n10) APPLICATION INTELLIGENCE\n${typeof buildAnalyzerReport === "function" ? buildAnalyzerReport(data) : "Analyzer module not loaded."}\n\n11) QUICK FOLLOW-UP MESSAGE\nHello, I recently applied for the ${data.jobTitle || "open IT role"} position${data.company ? ` at ${data.company}` : ""}. I’m very interested in the opportunity and believe my customer support background, CompTIA A+ knowledge, IT support training, cybersecurity foundation, and troubleshooting mindset would allow me to be a strong asset to the team. Thank you for your time and consideration.`;
 }
 
 function setOutput(text, title = "Generated career package") {
@@ -526,47 +533,162 @@ function writeSavedJobs(jobs) {
   localStorage.setItem("springtechSavedJobs", JSON.stringify(jobs));
 }
 
+const STATUS_OPTIONS = ["Saved", "Package Ready", "Applied", "Interviewing", "Followed Up", "Rejected", "Offer"];
+
+function nextActionFor(job) {
+  switch (job.status) {
+    case "Saved": return "Build the package, then apply.";
+    case "Package Ready": return "Add phone/email and submit the application.";
+    case "Applied": return job.followUpDate ? `Follow up on ${job.followUpDate}.` : "Set a follow-up date (3–5 business days out).";
+    case "Interviewing": return "Run the 24-hour study plan and prep STAR stories.";
+    case "Followed Up": return "Wait for reply; line up the next application meanwhile.";
+    case "Rejected": return "Log one lesson learned and move on.";
+    case "Offer": return "Review pay, schedule, and start date before accepting.";
+    default: return "Review and choose a status.";
+  }
+}
+
+function fitBadgeClass(score) {
+  if (score >= 80) return "fit-high";
+  if (score >= 60) return "fit-mid";
+  return "fit-low";
+}
+
+function updateJob(id, patch) {
+  const jobs = readSavedJobs().map((j) => (String(j.id) === String(id) ? { ...j, ...patch } : j));
+  writeSavedJobs(jobs);
+}
+
+function downloadText(filename, text, mime) {
+  const blob = new Blob([text], { type: (mime || "text/plain") + ";charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function exportSavedJobsCsv() {
+  const jobs = readSavedJobs();
+  if (!jobs.length) return;
+  const headers = ["Company", "Role", "Status", "Fit", "Saved", "FollowUp", "Link", "Notes"];
+  const esc = (v) => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`;
+  const rows = jobs.map((j) => [j.company, j.jobTitle, j.status, j.fitScore, j.date, j.followUpDate, j.jobUrl, j.notes].map(esc).join(","));
+  downloadText("springtech-applications.csv", [headers.join(","), ...rows].join("\n"), "text/csv");
+}
+
 function renderSavedJobs() {
   const jobs = readSavedJobs();
 
   if (!jobs.length) {
-    savedJobs.innerHTML = `<div class="panel step-card"><p>No saved jobs yet. Paste a job post and click Save job.</p></div>`;
+    savedJobs.innerHTML = `<div class="panel step-card"><p>No saved jobs yet. Paste a job post and click Save to tracker.</p></div>`;
     return;
   }
 
-  savedJobs.innerHTML = jobs
-    .map(
-      (job, index) => `
-      <article class="saved-job">
-        <div>
-          <strong>${job.jobTitle || "Untitled role"}</strong>
-          <p>${job.company || "No company added"} • Saved ${job.date}</p>
-        </div>
-        <button class="button ghost small" data-load-job="${index}" type="button">Load</button>
-        <button class="button ghost small" data-delete-job="${index}" type="button">Remove</button>
-      </article>`
-    )
-    .join("");
+  const toolbar = `
+    <div class="tracker-toolbar">
+      <span>${jobs.length} saved ${jobs.length === 1 ? "job" : "jobs"}</span>
+      <button class="button secondary small" id="export-csv" type="button">Export all (CSV)</button>
+    </div>`;
 
-  document.querySelectorAll("[data-delete-job]").forEach((button) => {
+  const cards = jobs.map((job) => {
+    const id = job.id;
+    const options = STATUS_OPTIONS.map((s) => `<option value="${s}" ${s === job.status ? "selected" : ""}>${s}</option>`).join("");
+    const fit = typeof job.fitScore === "number" ? job.fitScore : "—";
+    const safeTitle = (job.jobTitle || "Untitled role").replace(/</g, "&lt;");
+    const safeCompany = (job.company || "No company").replace(/</g, "&lt;");
+    const safeNotes = (job.notes || "").replace(/</g, "&lt;");
+    return `
+      <article class="saved-job" data-id="${id}">
+        <div class="saved-job-head">
+          <div>
+            <strong>${safeTitle}</strong>
+            <p>${safeCompany} • Saved ${job.date}</p>
+          </div>
+          <span class="fit-badge ${fitBadgeClass(job.fitScore || 0)}">Fit ${fit}</span>
+        </div>
+
+        <div class="saved-job-controls">
+          <label>Status
+            <select data-status="${id}">${options}</select>
+          </label>
+          <label>Follow-up
+            <input type="date" data-followup="${id}" value="${job.followUpDate || ""}" />
+          </label>
+        </div>
+
+        <p class="next-action"><strong>Next:</strong> ${nextActionFor(job)}</p>
+
+        <textarea class="saved-notes" data-notes="${id}" rows="2" placeholder="Notes for this application...">${safeNotes}</textarea>
+
+        <div class="saved-job-actions">
+          <button class="button ghost small" data-load-job="${id}" type="button">Load</button>
+          ${job.jobUrl ? `<button class="button ghost small" data-open-job="${id}" type="button">Open link</button>` : ""}
+          ${job.resumeVersion ? `<button class="button ghost small" data-resume-job="${id}" type="button">Resume .txt</button>` : ""}
+          <button class="button ghost small danger" data-delete-job="${id}" type="button">Remove</button>
+        </div>
+      </article>`;
+  }).join("");
+
+  savedJobs.innerHTML = toolbar + cards;
+
+  document.querySelector("#export-csv")?.addEventListener("click", exportSavedJobsCsv);
+
+  savedJobs.querySelectorAll("[data-status]").forEach((sel) => {
+    sel.addEventListener("change", () => {
+      updateJob(sel.dataset.status, { status: sel.value });
+      renderSavedJobs();
+    });
+  });
+
+  savedJobs.querySelectorAll("[data-followup]").forEach((inp) => {
+    inp.addEventListener("change", () => {
+      updateJob(inp.dataset.followup, { followUpDate: inp.value });
+      renderSavedJobs();
+    });
+  });
+
+  savedJobs.querySelectorAll("[data-notes]").forEach((area) => {
+    area.addEventListener("change", () => updateJob(area.dataset.notes, { notes: area.value }));
+  });
+
+  savedJobs.querySelectorAll("[data-open-job]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const job = readSavedJobs().find((j) => String(j.id) === btn.dataset.openJob);
+      if (job?.jobUrl) window.open(job.jobUrl, "_blank", "noopener,noreferrer");
+    });
+  });
+
+  savedJobs.querySelectorAll("[data-resume-job]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const job = readSavedJobs().find((j) => String(j.id) === btn.dataset.resumeJob);
+      if (job?.resumeVersion) {
+        const name = `${(job.company || "company")}-${(job.jobTitle || "role")}-resume`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+        downloadText(`${name}.txt`, job.resumeVersion);
+      }
+    });
+  });
+
+  savedJobs.querySelectorAll("[data-delete-job]").forEach((button) => {
     button.addEventListener("click", () => {
-      const index = Number(button.dataset.deleteJob);
-      const nextJobs = readSavedJobs().filter((_, jobIndex) => jobIndex !== index);
+      const nextJobs = readSavedJobs().filter((j) => String(j.id) !== button.dataset.deleteJob);
       writeSavedJobs(nextJobs);
       renderSavedJobs();
     });
   });
 
-  document.querySelectorAll("[data-load-job]").forEach((button) => {
+  savedJobs.querySelectorAll("[data-load-job]").forEach((button) => {
     button.addEventListener("click", () => {
-      const index = Number(button.dataset.loadJob);
-      const job = readSavedJobs()[index];
+      const job = readSavedJobs().find((j) => String(j.id) === button.dataset.loadJob);
       if (!job) return;
-
       document.querySelector("#job-title").value = job.jobTitle || "";
       document.querySelector("#company").value = job.company || "";
       document.querySelector("#job-description").value = job.jobDescription || "";
       document.querySelector("#notes").value = job.notes || "";
+      if (document.querySelector("#job-url")) document.querySelector("#job-url").value = job.jobUrl || "";
       setOutput(generateOutput(getFormData()), "Loaded saved job package");
       window.location.hash = "workspace";
     });
@@ -602,18 +724,28 @@ saveJobButton.addEventListener("click", () => {
     return;
   }
 
+  const keywords = extractKeywords(data.jobDescription);
+  const roleProfile = getRoleProfile(data);
+  const fit = calculateFitScore(keywords, roleProfile);
+
   const jobs = readSavedJobs();
   jobs.unshift({
+    id: Date.now(),
     jobTitle: data.jobTitle,
     company: data.company,
+    jobUrl: data.jobUrl,
     jobDescription: data.jobDescription,
     notes: data.notes,
+    status: "Saved",
+    fitScore: fit.score,
+    followUpDate: "",
+    resumeVersion: data.jobDescription || data.jobTitle ? buildResumeDraft(data, roleProfile, keywords) : "",
     date: new Date().toLocaleDateString()
   });
 
-  writeSavedJobs(jobs.slice(0, 20));
+  writeSavedJobs(jobs.slice(0, 50));
   renderSavedJobs();
-  setOutput("Job saved to your browser tracker. You can load it later and regenerate the full package.", "Saved");
+  setOutput("Job saved to your tracker with its own tailored resume version. Set a status and follow-up date below.", "Saved");
 });
 
 clearButton.addEventListener("click", () => {
