@@ -156,5 +156,5 @@ async function runLinkOnlyMode() {
 }
 
 if (linkOnlyButton) {
-  linkOnlyButton.addEventListener("click", runLinkOnlyMode);
+  linkOnlyButton.addEventListener("click", runLinkOnlyMode);}
 }
