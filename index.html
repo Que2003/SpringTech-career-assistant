@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SpringTech Career Assistant</title>
-  <meta name="description" content="Career assistant for IT support, cybersecurity, help desk, desktop support, and technical support job applications." />
+  <meta name="description" content="Career assistant and safe application autopilot for IT support, cybersecurity, help desk, desktop support, and technical support job applications." />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -19,16 +19,16 @@
 
     <section class="hero-grid">
       <div>
-        <p class="eyebrow">IT career toolkit</p>
-        <h1>Turn a job post into a full application package.</h1>
+        <p class="eyebrow">Application autopilot</p>
+        <h1>Build the package, open the application, and track your submission.</h1>
         <p class="hero-copy">
-          Paste a job description and the assistant will use Quenton’s built-in IT profile to create
-          a tailored resume draft, cover letter, ATS keywords, recruiter message, interview prep,
-          and application checklist.
+          Paste a job post and apply link. The assistant uses Quenton’s IT profile to build a tailored resume draft,
+          cover letter, recruiter message, interview prep, and a safe step-by-step apply plan. You stay in control
+          and approve the final submission.
         </p>
         <div class="hero-actions">
-          <a class="button primary" href="#workspace">Build full package</a>
-          <a class="button secondary" href="#roadmap">View roadmap</a>
+          <a class="button primary" href="#workspace">Build apply package</a>
+          <a class="button secondary" href="#tracker">View tracker</a>
         </div>
       </div>
 
@@ -48,9 +48,12 @@
   <main>
     <section id="workspace" class="workspace section">
       <div class="section-heading">
-        <p class="eyebrow">Application builder</p>
+        <p class="eyebrow">Safe apply workflow</p>
         <h2>Paste the job details</h2>
-        <p>Use this for help desk, desktop support, technical support, SOC, cybersecurity, data center, networking, and field IT roles.</p>
+        <p>
+          This prepares everything, opens the apply page, and tracks the job so you can review and submit accurately.
+          It does not bypass logins, captchas, or legal certification questions.
+        </p>
       </div>
 
       <div class="app-grid">
@@ -61,17 +64,24 @@
           <label for="company">Company</label>
           <input id="company" name="company" type="text" placeholder="Example: prosource.it" />
 
+          <label for="job-url">Apply link</label>
+          <input id="job-url" name="jobUrl" type="url" placeholder="https://company.com/careers/job" />
+
           <label for="job-description">Job description</label>
           <textarea id="job-description" name="jobDescription" rows="10" placeholder="Paste the job description here..."></textarea>
 
           <label for="notes">Extra notes for this application</label>
-          <textarea id="notes" name="notes" rows="5" placeholder="Example: willing to relocate, remote preferred, specific tools from the job post, recruiter name, etc."></textarea>
+          <textarea id="notes" name="notes" rows="5" placeholder="Example: willing to relocate, remote preferred, recruiter name, salary range, schedule, tools from the job post..."></textarea>
 
           <div class="button-row">
-            <button class="button primary" type="submit">Build full package</button>
-            <button class="button secondary" id="save-job" type="button">Save job</button>
+            <button class="button primary" id="apply-assist" type="button">One-click apply assist</button>
+            <button class="button secondary" type="submit">Build package only</button>
+            <button class="button secondary" id="save-job" type="button">Save to tracker</button>
+            <button class="button secondary" id="open-apply" type="button">Open apply page</button>
             <button class="button ghost" id="clear-form" type="button">Clear</button>
           </div>
+
+          <div id="assist-status" class="assist-status" aria-live="polite"></div>
         </form>
 
         <section class="panel output-panel" aria-live="polite">
@@ -86,13 +96,13 @@
             </div>
           </div>
           <div id="output" class="output empty">
-            Paste a job description and click Build full package. Your tailored resume, cover letter, keywords, recruiter message, and interview prep will appear here.
+            Paste a job description and click One-click apply assist. Your tailored resume, cover letter, keywords, recruiter message, and interview prep will appear here.
           </div>
         </section>
       </div>
     </section>
 
-    <section class="section saved-section">
+    <section id="tracker" class="section saved-section">
       <div class="section-heading">
         <p class="eyebrow">Job tracker</p>
         <h2>Saved opportunities</h2>
@@ -131,5 +141,6 @@
   </footer>
 
   <script src="app.js"></script>
+  <script src="apply-assist.js"></script>
 </body>
 </html>
