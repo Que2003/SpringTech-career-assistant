@@ -48,6 +48,34 @@ function textFromHtml(html) {
   return `${title}\n${body}`.replace(/\n{3,}/g, "\n\n").trim();
 }
 
+function cleanPostingText(text) {
+  return text
+    .replace(/\t/g, " ")
+    .replace(/ {2,}/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join("\n")
+    .slice(0, 14000);
+}
+
+function looksLikeJobDescription(text) {
+  const lowered = text.toLowerCase();
+  const signals = [
+    "responsibilities",
+    "qualifications",
+    "requirements",
+    "job description",
+    "what you will do",
+    "about the role",
+    "experience",
+    "skills",
+    "apply"
+  ];
+  return text.length > 600 && signals.filter((signal) => lowered.includes(signal)).length >= 2;
+}
+
 async function fetchPublicPostingText(url) {
   const targets = [
     url.href,
@@ -60,9 +88,10 @@ async function fetchPublicPostingText(url) {
       if (!response.ok) continue;
       const raw = await response.text();
       const text = raw.includes("<html") || raw.includes("<!DOCTYPE") ? textFromHtml(raw) : raw;
-      if (text && text.length > 350) return text.slice(0, 12000);
+      const cleaned = cleanPostingText(text);
+      if (looksLikeJobDescription(cleaned)) return cleaned;
     } catch {
-      // Some job boards block browser reading. The fallback still uses the link.
+      // Some job boards block browser reading. The user can still paste the description manually.
     }
   }
 
@@ -90,6 +119,10 @@ function fillField(selector, value, overwrite = false) {
   if (overwrite || !field.value.trim()) field.value = value;
 }
 
+function openLinkInNewTab(url) {
+  window.open(url.href, "_blank", "noopener,noreferrer");
+}
+
 async function runLinkOnlyMode() {
   const value = getUrlValue();
   const url = safeUrl(value);
@@ -103,26 +136,23 @@ async function runLinkOnlyMode() {
   fillField("#company", inferred.company);
   fillField("#job-title", inferred.guessedTitle);
 
-  setLinkReaderStatus("Reading the public job link. Some job boards may block automatic reading.");
+  setLinkReaderStatus("Reading the job description from the link. If the site allows reading, the package will build automatically.");
   const postingText = await fetchPublicPostingText(url);
 
   if (postingText) {
     fillField("#company", findLikelyCompany(postingText, inferred.company), true);
     fillField("#job-title", findLikelyTitle(postingText, inferred.guessedTitle), true);
     fillField("#job-description", postingText, true);
-    setLinkReaderStatus("Job link read. Building your package now.");
-  } else {
-    fillField(
-      "#job-description",
-      `Public job page could not be read automatically from this browser. Use the apply link and paste the job description here for a stronger package. Link: ${url.href}`,
-      true
-    );
-    setLinkReaderStatus("The job board blocked automatic reading, so I used the link and opened the posting for you.");
+    setLinkReaderStatus("Job description found. Building the tailored package from the link now.");
+
+    if (typeof runApplyAssist === "function") {
+      runApplyAssist();
+    }
+    return;
   }
 
-  if (typeof runApplyAssist === "function") {
-    runApplyAssist();
-  }
+  openLinkInNewTab(url);
+  setLinkReaderStatus("This job board blocked automatic reading. The posting opened in a new tab. Copy the description back here and click Build package only.");
 }
 
 if (linkOnlyButton) {
