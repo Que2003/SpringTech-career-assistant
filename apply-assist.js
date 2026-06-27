@@ -27,20 +27,18 @@ function isWebLink(value) {
 }
 
 function saveApplyAssistJob(status) {
+  // Reuse the canonical save in app.js so the record has id, fitScore,
+  // resumeVersion, etc. Then patch in the status + URL.
+  const saveBtn = document.querySelector("#save-job");
+  if (saveBtn) saveBtn.click();
   const data = getApplyAssistData();
   const savedJobs = JSON.parse(localStorage.getItem("springtechSavedJobs") || "[]");
-
-  savedJobs.unshift({
-    jobTitle: data.jobTitle,
-    company: data.company,
-    jobDescription: data.jobDescription,
-    notes: data.notes,
-    jobUrl: data.jobUrl,
-    status,
-    date: new Date().toLocaleDateString()
-  });
-
-  localStorage.setItem("springtechSavedJobs", JSON.stringify(savedJobs.slice(0, 20)));
+  if (savedJobs.length) {
+    savedJobs[0].status = status || savedJobs[0].status || "Saved";
+    savedJobs[0].jobUrl = data.jobUrl || savedJobs[0].jobUrl || "";
+    localStorage.setItem("springtechSavedJobs", JSON.stringify(savedJobs));
+    if (typeof renderSavedJobs === "function") renderSavedJobs();
+  }
 }
 
 function buildPackage() {
@@ -80,42 +78,26 @@ function runApplyAssist() {
   }
 
   buildPackage();
-  saveApplyAssistJob("Package ready");
+  saveApplyAssistJob("Package Ready");
 
   setTimeout(() => {
     downloadGeneratedPackage();
+    if (typeof downloadApplicationPdfs === "function") downloadApplicationPdfs();
     if (data.jobUrl) openApplyPage();
-    setApplyAssistStatus("Package built, downloaded, and saved. Review the application before you send it.");
-  }, 250);
+    setApplyAssistStatus("Package built, PDFs downloaded, and saved to tracker. Review everything before you submit.");
+  }, 300);
 }
 
 if (assistButton) assistButton.addEventListener("click", runApplyAssist);
 if (openApplyButton) openApplyButton.addEventListener("click", openApplyPage);
-
-const saveJobButton = document.querySelector("#save-job");
-if (saveJobButton) {
-  saveJobButton.addEventListener("click", () => {
-    setTimeout(() => {
-      const data = getApplyAssistData();
-      const savedJobs = JSON.parse(localStorage.getItem("springtechSavedJobs") || "[]");
-      if (savedJobs.length) {
-        savedJobs[0].jobUrl = data.jobUrl;
-        savedJobs[0].status = savedJobs[0].status || "Saved";
-        localStorage.setItem("springtechSavedJobs", JSON.stringify(savedJobs));
-      }
-      setApplyAssistStatus("Saved to tracker.");
-    }, 100);
-  });
-}
 
 document.addEventListener("click", (event) => {
   const loadButton = event.target.closest("[data-load-job]");
   if (!loadButton) return;
 
   setTimeout(() => {
-    const index = Number(loadButton.dataset.loadJob);
     const savedJobs = JSON.parse(localStorage.getItem("springtechSavedJobs") || "[]");
-    const job = savedJobs[index];
+    const job = savedJobs.find((j) => String(j.id) === loadButton.dataset.loadJob);
     if (jobUrlInput && job) jobUrlInput.value = job.jobUrl || "";
   }, 50);
 });
