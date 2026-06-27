@@ -20,14 +20,13 @@
     <section class="hero-grid">
       <div>
         <p class="eyebrow">Application autopilot</p>
-        <h1>Build the package, open the application, and track your submission.</h1>
+        <h1>Paste a link and build the application package.</h1>
         <p class="hero-copy">
-          Paste a job post and apply link. The assistant uses Quenton’s IT profile to build a tailored resume draft,
-          cover letter, recruiter message, interview prep, and a safe step-by-step apply plan. You stay in control
-          and approve the final submission.
+          Add a job link and the assistant will try to read the public posting, fill in the title, company, and description,
+          then build the tailored package, save the job, download the package, and open the apply page for your final review.
         </p>
         <div class="hero-actions">
-          <a class="button primary" href="#workspace">Build apply package</a>
+          <a class="button primary" href="#workspace">Use link-only mode</a>
           <a class="button secondary" href="#tracker">View tracker</a>
         </div>
       </div>
@@ -48,33 +47,34 @@
   <main>
     <section id="workspace" class="workspace section">
       <div class="section-heading">
-        <p class="eyebrow">Safe apply workflow</p>
-        <h2>Paste the job details</h2>
+        <p class="eyebrow">Link-only workflow</p>
+        <h2>Paste the job link</h2>
         <p>
-          This prepares everything, opens the apply page, and tracks the job so you can review and submit accurately.
-          It does not bypass logins, captchas, or legal certification questions.
+          Link-only mode tries to read public job pages automatically. If a job board blocks reading, the assistant still
+          uses the link to open the posting and lets you paste the description manually.
         </p>
       </div>
 
       <div class="app-grid">
         <form id="career-form" class="panel form-panel">
-          <label for="job-title">Job title</label>
-          <input id="job-title" name="jobTitle" type="text" placeholder="Example: IT Desktop Support Technician" />
-
-          <label for="company">Company</label>
-          <input id="company" name="company" type="text" placeholder="Example: prosource.it" />
-
-          <label for="job-url">Apply link</label>
+          <label for="job-url">Job / apply link</label>
           <input id="job-url" name="jobUrl" type="url" placeholder="https://company.com/careers/job" />
 
+          <label for="job-title">Job title</label>
+          <input id="job-title" name="jobTitle" type="text" placeholder="Auto-filled from link when possible" />
+
+          <label for="company">Company</label>
+          <input id="company" name="company" type="text" placeholder="Auto-filled from link when possible" />
+
           <label for="job-description">Job description</label>
-          <textarea id="job-description" name="jobDescription" rows="10" placeholder="Paste the job description here..."></textarea>
+          <textarea id="job-description" name="jobDescription" rows="10" placeholder="Auto-filled from link when possible. If blocked, paste the job description here."></textarea>
 
           <label for="notes">Extra notes for this application</label>
           <textarea id="notes" name="notes" rows="5" placeholder="Example: willing to relocate, remote preferred, recruiter name, salary range, schedule, tools from the job post..."></textarea>
 
           <div class="button-row">
-            <button class="button primary" id="apply-assist" type="button">One-click apply assist</button>
+            <button class="button primary" id="link-only-assist" type="button">Use link only</button>
+            <button class="button secondary" id="apply-assist" type="button">One-click prepare</button>
             <button class="button secondary" type="submit">Build package only</button>
             <button class="button secondary" id="save-job" type="button">Save to tracker</button>
             <button class="button secondary" id="open-apply" type="button">Open apply page</button>
@@ -96,7 +96,7 @@
             </div>
           </div>
           <div id="output" class="output empty">
-            Paste a job description and click One-click apply assist. Your tailored resume, cover letter, keywords, recruiter message, and interview prep will appear here.
+            Paste a job link and click Use link only. The assistant will try to read the posting and build your tailored package.
           </div>
         </section>
       </div>
@@ -142,5 +142,6 @@
 
   <script src="app.js"></script>
   <script src="apply-assist.js"></script>
+  <script src="link-reader.js"></script>
 </body>
 </html>
